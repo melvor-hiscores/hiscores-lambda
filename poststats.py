@@ -1,5 +1,6 @@
 import json
 import boto3
+import datetime
 
 client = boto3.client('dynamodb')
 
@@ -16,7 +17,6 @@ def extract_username(event):
     try:
         return event[PATH_PARAMETERS_KEY][USERNAME_KEY]
     except Exception as e:
-        print('EEEEEEXCEPTION : ' + str(e))
         raise Exception('400 Bad Request | APIGateway username must be in the format : ' + FMT_USERNAME)
 
 def extract_data(event):
@@ -30,7 +30,6 @@ def extract_data(event):
         raise Exception('500 Internal Server Error | APIGateway must have \'' + BODY_KEY + '\' as a key')
 
     try:
-        print('REEEEEE' + event[BODY_KEY])
         return json.loads(event[BODY_KEY])[DATA_KEY]
     except:
         raise Exception('400 Bad Request | Request body must be in the format : ' + FMT_DATA)
@@ -44,6 +43,9 @@ def add_data_for_user(username, data):
             },
             'data': {
                 'S' : data
+            },
+            'updt_dt_tm': {
+                'S' : str(datetime.datetime.utcnow())
             }
         }
     )
