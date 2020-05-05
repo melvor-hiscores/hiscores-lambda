@@ -1,80 +1,39 @@
-import json
-import boto3
+function extractSkills() {
+    let dataJson = {};
 
-client = boto3.client('dynamodb')
+    /* These are the JSON keys we are interested in */
+    const KEYS = ['skillLevel', 'skillXP', 'username']
 
-def extract_username(event):
-    
-    # for parsing username
-    PATH_PARAMETERS_KEY = 'pathParameters'
-    USERNAME_KEY = 'username'
-    FMT_USERNAME = '{ \"' + USERNAME_KEY + '\": \"<username>\" }'
-    
-    if (PATH_PARAMETERS_KEY not in event.keys()):
-        raise Exception('500 Internal Server Error | APIGateway must have \'' + PATH_PARAMETERS_KEY + '\' as a key')
-        
-    try:
-        return event[PATH_PARAMETERS_KEY][USERNAME_KEY]
-    except Exception as e:
-        raise Exception('500 Internal Server Error | APIGateway username must be in the format : ' + FMT_USERNAME)
-
-def extract_data(event):
-    
-    # for parsing data
-    BODY_KEY = 'body'
-    DATA_KEY = 'data'
-    FMT_DATA = '{ \"' + DATA_KEY + '\": \"<base64 encoded, gzipped data>\" }'
-    
-    if (BODY_KEY not in event.keys()):
-        raise Exception('500 Internal Server Error | APIGateway must have \'' + BODY_KEY + '\' as a key')
-
-    try:
-        print('REEEEEE' + event[BODY_KEY])
-        return json.loads(event[BODY_KEY])[DATA_KEY]
-    except:
-        raise Exception('400 Bad Request | Request body must be in the format : ' + FMT_DATA)
-        
-def add_data_for_user(username, data):
-    response = client.put_item(
-        TableName = 'MelvorHiscores',
-        Item = {
-            'username': {
-                'S' : username
-            },
-            'data': {
-                'S' : data
-            }
+    /* Loop over the save file JSON keys */
+    for (let i = 0; i < allVars.length; i++) {
+        /* Reached a key we are interested in */
+        if (KEYS.includes(allVars[i])) {
+            /* Add to our JSON */
+            dataJson[allVars[i]] = getItem(allVars[i]);
         }
-    )
-    print(f'melvorhiscores-poststats Processed the request for user {username} and got the response {response}')
+    }
 
-def lambda_handler(event, context):
+    /* gzip and B64 encode */
+    const pakoSave = pako.gzip(JSON.stringify(dataJson), { to: 'string' });
+    return [ dataJson['username'], btoa(pakoSave) ];
+}
 
-    try:
-        username = extract_username(event)
-        print('username : ' + username)
-        data = extract_data(event)
-        print('data : ' + data)
-        
-        add_data_for_user(username, data)
-        
-        return {
-            'statusCode': 200,
-            'body': None
+function sendToHiscoresAPI(username, b64JsonString) {
+    $.ajax({
+        url: 'https://l9ahyalvt7.execute-api.us-east-1.amazonaws.com/prod/users/jadedtdt',
+        type: 'POST',
+        async: true,
+        data: JSON.stringify({
+            "data" : "test"
+        }),
+        success: function(data) {
+            console.log('Updated hiscores for user: jadedtdt');
         }
-    except Exception as e:
-        print(f'melvorhiscores-poststats Exception was caught : {str(e)}')
-        
-        try:
-            errorCd = str(e)[0:3] # Get the status code from the first 3 characters of the string
-            errorMsg = str(e).split(' | ')[1] # Get the status code from the first 3 characters of the string
-            return {
-                'statusCode': errorCd, 
-                'body': errorMsg
-            }
-        except:
-            
-            return {
-                'statusCode': '500', 
-                'body': 'An unknown exception occurred'
-            }
+    });
+}
+
+function main() {
+    let [ username, data ] = extractSkills();
+    sendToHiscoresAPI('jadedtdt', 'melvor test');
+}
+main();
