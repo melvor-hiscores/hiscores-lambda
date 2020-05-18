@@ -1,5 +1,6 @@
 import base64
 import boto3
+import math
 import json
 import zlib
 
@@ -54,6 +55,21 @@ def get_user_json_from_scan_for_index(scan_result, index):
     
 def get_data_json_from_user_json(user_json):
     return json.loads(convert_data(user_json['data']['S']))
+    
+def equate(xp):
+    return math.floor(xp + 300 * math.pow(2, xp / 7));
+    
+def level_to_xp(level):
+    xp = 0;
+    for i in range(1, int(level)+1):
+        xp += equate(i);
+    return math.floor(xp / 4);
+    
+def xp_to_virtual_level(xp):
+    level = 1;
+    while level_to_xp(level) < int(xp):
+        level += 1;
+    return level;
 
 def lambda_handler(event, context):
     
@@ -96,10 +112,14 @@ def lambda_handler(event, context):
             print('rank: ' + new_json['rank'])
             new_json['name'] = str(user_data['username'])
             print('name: ' + new_json['name'])
-            new_json['level'] = str(user_data['skillLevel'][skill_index])
-            print('level: ' + new_json['level'])
             new_json['xp'] = str(user_data['skillXP'][skill_index])
             print('xp: ' + new_json['xp'])
+            new_json['level'] = str(user_data['skillLevel'][skill_index])
+            print('level: ' + new_json['level'])
+            # Adding check for virtual levels since v0.15 of melvor
+            if queryParam != 'total' and int(new_json['level']) >= 99:
+                new_json['level'] = str(xp_to_virtual_level(new_json['xp']))
+                print('virtual level: ' + new_json['level'])
             new_json['updt_dt_tm'] = str(original_user_json['updt_dt_tm']['S'])
             print('updt_dt_tm: ' + new_json['updt_dt_tm'])
             

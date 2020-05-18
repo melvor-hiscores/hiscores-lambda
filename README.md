@@ -1,2 +1,11 @@
 # poststats-lambda
-The lambda that gets invoked when doing the POST on /users/{username}
+The python code used for the lambdas in API Gateway.
+
+Currently supports the endpoints
+
+/
+    /ranks
+        GET
+    /users
+        /username
+            POST
