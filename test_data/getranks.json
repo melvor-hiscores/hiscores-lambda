@@ -1,0 +1,41 @@
+{
+  "resource": "/ranks",
+  "path": "/ranks",
+  "httpMethod": "GET",
+  "headers": null,
+  "multiValueHeaders": null,
+  "queryStringParameters": {
+    "skill": "woodcutting"
+  },
+  "multiValueQueryStringParameters": {
+    "skill": [
+      "woodcutting"
+    ]
+  },
+  "pathParameters": null,
+  "stageVariables": null,
+  "requestContext": {
+    "resourceId": "nebpkb",
+    "resourcePath": "/ranks",
+    "httpMethod": "GET",
+    "extendedRequestId": "MI9MUEAAIAMFZKA=",
+    "requestTime": "07/May/2020:02:42:09 +0000",
+    "path": "/ranks",
+    "accountId": "redacted",
+    "protocol": "HTTP/1.1",
+    "stage": "test-invoke-stage",
+    "domainPrefix": "testPrefix",
+    "requestTimeEpoch": 1588819329925,
+    "requestId": "48e0f6ae-0272-4f7f-ab05-a659de39224c",
+    "identity": {
+      "cognitoIdentityPoolId": null,
+      "cognitoIdentityId": null,
+      "apiKey": "test-invoke-api-key",
+      "principalOrgId": null,
+      "cognitoAuthenticationType": null,
+      "userArn": "arn:aws:iam::redacted:root",
+      "apiKeyId": "test-invoke-api-key-id",
+      "userAgent": "aws-internal/3 aws-sdk-java/1.11.749 Linux/4.9.184-0.1.ac.235.83.329.metal1.x86_64 OpenJDK_64-Bit_Server_VM/25.242-b0 [TRUNCATED]"
+    }
+  }
+}

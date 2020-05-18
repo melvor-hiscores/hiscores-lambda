@@ -1,4 +1,0 @@
-{
-  "pathParameters": { "username": "jadedtdt"},
-  "body": "{\n    \"data\": \"test123\"\n}"
-}
