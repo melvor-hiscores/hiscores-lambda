@@ -91,8 +91,8 @@ def lambda_handler(event, context):
             skill_xp = get_data_json_from_user_json(each_user_json)['skillXP'][skill_index]
             skill_level = get_data_json_from_user_json(each_user_json)['skillLevel'][skill_index]
             if queryParam != 'total' and int(skill_level) >= 99:
-                skill_level = str(xp_to_virtual_level(skill_xp))
-                print('virtual level: ' + skill_level)
+                skill_level = xp_to_virtual_level(skill_xp)
+                print('virtual level: ' + str(skill_level))
             name = get_data_json_from_user_json(each_user_json)['username']
 
             each_user_tuple = (skill_level, skill_xp, name, each_user_index)
