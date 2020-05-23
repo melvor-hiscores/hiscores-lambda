@@ -69,6 +69,101 @@ def xp_to_virtual_level(xp):
     while level_to_xp(level) < int(xp):
         level += 1
     return level
+    
+def process_users_for_skill(queryParam, scan_result):
+    users_tuple_list = []
+
+    # for each user, put their user index in the bucket for their xp in the query param skill
+    for each_user_index in range(0, len(scan_result['Items'])):
+        each_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
+        #print('each_user: ' + str(each_user_json))
+        skill_index = skill_index_dict[queryParam]
+        user_data = get_data_json_from_user_json(each_user_json)
+    
+        skill_xp = user_data['skillXP'][skill_index]
+        skill_level = user_data['skillLevel'][skill_index]
+        if queryParam != 'total' and queryParam != 'gp' and int(skill_level) >= 99:
+            skill_level = xp_to_virtual_level(skill_xp)
+            print('virtual level: ' + str(skill_level))
+        
+        name = user_data['username']
+
+        each_user_tuple = (skill_level, skill_xp, name, each_user_index)
+        users_tuple_list.append(each_user_tuple)
+        
+    print(str(users_tuple_list))
+
+    s = sorted(users_tuple_list, key = lambda x: (x[0], x[1], x[2]), reverse=True)
+
+    sorted_results = []
+
+    for i, each_user_tuple in enumerate(s):
+        each_user_index = each_user_tuple[3]
+        original_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
+        user_data = get_data_json_from_user_json(original_user_json)
+
+        new_json = {}
+        new_json['rank'] = str(i+1)
+        print('rank: ' + new_json['rank'])
+        new_json['name'] = str(user_data['username'])
+        print('name: ' + new_json['name'])
+        new_json['level'] = str(user_data['skillLevel'][skill_index])
+        print('level: ' + new_json['level'])
+        new_json['xp'] = str(user_data['skillXP'][skill_index])
+        print('xp: ' + new_json['xp'])
+        
+        # Adding check for virtual levels since v0.15 of melvor
+        if queryParam != 'total' and queryParam != 'gp' and int(new_json['level']) >= 99:
+            new_json['level'] = str(xp_to_virtual_level(new_json['xp']))
+            print('virtual level: ' + new_json['level'])
+        new_json['updt_dt_tm'] = str(original_user_json['updt_dt_tm']['S'])
+        print('updt_dt_tm: ' + new_json['updt_dt_tm'])
+
+        sorted_results.append(new_json)
+        
+    return sorted_results
+        
+
+def process_users_for_gp(queryParam, scan_result):
+    users_tuple_list = []
+
+    # for each user, put their user index in the bucket for their xp in the query param skill
+    for each_user_index in range(0, len(scan_result['Items'])):
+        each_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
+        #print('each_user: ' + str(each_user_json))
+        user_data = get_data_json_from_user_json(each_user_json)
+    
+        gp = user_data['gp'] if 'gp' in user_data.keys() else 0
+        
+        name = user_data['username']
+
+        each_user_tuple = (gp, name, each_user_index)
+        users_tuple_list.append(each_user_tuple)
+        
+    print(str(users_tuple_list))
+
+    s = sorted(users_tuple_list, key = lambda x: (x[0], x[1]), reverse=True)
+
+    sorted_results = []
+
+    for i, each_user_tuple in enumerate(s):
+        each_user_index = each_user_tuple[2]
+        original_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
+        user_data = get_data_json_from_user_json(original_user_json)
+
+        new_json = {}
+        new_json['rank'] = str(i+1)
+        print('rank: ' + new_json['rank'])
+        new_json['name'] = str(user_data['username'])
+        print('name: ' + new_json['name'])
+        new_json['gp'] = str(user_data['gp'] if 'gp' in user_data.keys() else 0)
+        print('gp: ' + new_json['gp'])
+        new_json['updt_dt_tm'] = str(original_user_json['updt_dt_tm']['S'])
+        print('updt_dt_tm: ' + new_json['updt_dt_tm'])
+
+        sorted_results.append(new_json)
+        
+    return sorted_results
 
 def lambda_handler(event, context):
 
@@ -76,56 +171,15 @@ def lambda_handler(event, context):
 
         queryParam = extract_skill(event).lower()
         print('queryParam: ' + queryParam)
-        skill_index = skill_index_dict[queryParam]
-
+        
         scan_result = client.scan(
             TableName='MelvorHiscores'
         )
-
-        users_tuple_list = []
-
-        # for each user, put their user index in the bucket for their xp in the query param skill
-        for each_user_index in range(0, len(scan_result['Items'])):
-            each_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
-            #print('each_user: ' + str(each_user_json))
-            skill_xp = get_data_json_from_user_json(each_user_json)['skillXP'][skill_index]
-            skill_level = get_data_json_from_user_json(each_user_json)['skillLevel'][skill_index]
-            if queryParam != 'total' and int(skill_level) >= 99:
-                skill_level = xp_to_virtual_level(skill_xp)
-                print('virtual level: ' + str(skill_level))
-            name = get_data_json_from_user_json(each_user_json)['username']
-
-            each_user_tuple = (skill_level, skill_xp, name, each_user_index)
-            users_tuple_list.append(each_user_tuple)
-
-        print(str(users_tuple_list))
-
-        s = sorted(users_tuple_list, key = lambda x: (x[0], x[1], x[2]), reverse=True)
-
-        sorted_results = []
-
-        for i, each_user_tuple in enumerate(s):
-            each_user_index = each_user_tuple[3]
-            original_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
-            user_data = get_data_json_from_user_json(original_user_json)
-
-            new_json = {}
-            new_json['rank'] = str(i+1)
-            print('rank: ' + new_json['rank'])
-            new_json['name'] = str(user_data['username'])
-            print('name: ' + new_json['name'])
-            new_json['xp'] = str(user_data['skillXP'][skill_index])
-            print('xp: ' + new_json['xp'])
-            new_json['level'] = str(user_data['skillLevel'][skill_index])
-            print('level: ' + new_json['level'])
-            # Adding check for virtual levels since v0.15 of melvor
-            if queryParam != 'total' and int(new_json['level']) >= 99:
-                new_json['level'] = str(xp_to_virtual_level(new_json['xp']))
-                print('virtual level: ' + new_json['level'])
-            new_json['updt_dt_tm'] = str(original_user_json['updt_dt_tm']['S'])
-            print('updt_dt_tm: ' + new_json['updt_dt_tm'])
-
-            sorted_results.append(new_json)
+        
+        if queryParam == 'gp':
+            sorted_results = process_users_for_gp(queryParam, scan_result)
+        else:
+            sorted_results = process_users_for_skill(queryParam, scan_result)
 
         return {
             'statusCode': 200,
@@ -137,7 +191,6 @@ def lambda_handler(event, context):
             'body': json.dumps(sorted_results)
         }
     except Exception as e:
-
         return {
             'statusCode': 500,
             'headers': {

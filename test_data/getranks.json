@@ -5,11 +5,11 @@
   "headers": null,
   "multiValueHeaders": null,
   "queryStringParameters": {
-    "skill": "woodcutting"
+    "skill": "mining"
   },
   "multiValueQueryStringParameters": {
     "skill": [
-      "woodcutting"
+      "mining"
     ]
   },
   "pathParameters": null,
