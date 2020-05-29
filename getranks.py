@@ -178,10 +178,6 @@ def process_users_for_combat(queryParam, scan_result):
             user_data['skillLevel'][skill_index_dict['magic']], user_data['skillLevel'][skill_index_dict['prayer']]))
         print('level: ' + new_json['level'])
 
-        # Adding check for virtual levels since v0.15 of melvor
-        if queryParam != 'total' and queryParam != 'gp' and int(new_json['level']) >= 99:
-            new_json['level'] = str(xp_to_virtual_level(new_json['xp']))
-            print('virtual level: ' + new_json['level'])
         new_json['updt_dt_tm'] = str(original_user_json['updt_dt_tm']['S'])
         print('updt_dt_tm: ' + new_json['updt_dt_tm'])
 
