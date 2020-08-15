@@ -79,6 +79,9 @@ def calculate_combat_level(attack_lvl, strength_lvl, defence_lvl, hitpoints_lvl,
     combat_level = math.floor(base + max(levels))
     return int(combat_level)
 
+def calculate_num_99s(skills):
+    return sum(1 for each_skill in skills if int(each_skill) >= 99)
+
 def process_users_for_skill(queryParam, scan_result):
     users_tuple_list = []
 
@@ -118,7 +121,7 @@ def process_users_for_skill(queryParam, scan_result):
         print('name: ' + new_json['name'])
         new_json['level'] = str(user_data['skillLevel'][skill_index])
         print('level: ' + new_json['level'])
-        new_json['xp'] = str(user_data['skillXP'][skill_index])
+        new_json['xp'] = str(int(user_data['skillXP'][skill_index]))
         print('xp: ' + new_json['xp'])
 
         # Adding check for virtual levels since v0.15 of melvor
@@ -195,23 +198,31 @@ def process_users_for_gp(queryParam, scan_result):
         #print('each_user: ' + str(each_user_json))
         user_data = get_data_json_from_user_json(each_user_json)
 
+        # exclude the total level
+        user_data['num99s'] = calculate_num_99s(user_data['skillLevel'][1:]) if 'skillLevel' in user_data.keys() else 0
+
         gp = user_data['gp'] if 'gp' in user_data.keys() else 0
+        num99s = user_data['num99s'] if 'num99s' in user_data.keys() else 0
+        pets = user_data['pets'] if 'pets' in user_data.keys() else 0
 
         name = user_data['username']
 
-        each_user_tuple = (gp, name, each_user_index)
+        each_user_tuple = (gp, num99s, pets, name, each_user_index)
         users_tuple_list.append(each_user_tuple)
 
     print(str(users_tuple_list))
 
-    s = sorted(users_tuple_list, key = lambda x: (x[0], x[1]), reverse=True)
+    s = sorted(users_tuple_list, key = lambda x: (x[0], x[1], x[2], x[3]), reverse=True)
 
     sorted_results = []
 
     for i, each_user_tuple in enumerate(s):
-        each_user_index = each_user_tuple[2]
+        each_user_index = each_user_tuple[-1]
         original_user_json = get_user_json_from_scan_for_index(scan_result, each_user_index)
         user_data = get_data_json_from_user_json(original_user_json)
+
+        # exclude the total level
+        user_data['num99s'] = calculate_num_99s(user_data['skillLevel'][1:]) if 'skillLevel' in user_data.keys() else 0
 
         new_json = {}
         new_json['rank'] = str(i+1)
@@ -220,6 +231,10 @@ def process_users_for_gp(queryParam, scan_result):
         print('name: ' + new_json['name'])
         new_json['gp'] = str(user_data['gp'] if 'gp' in user_data.keys() else 0)
         print('gp: ' + new_json['gp'])
+        new_json['num99s'] = str(user_data['num99s'] if 'num99s' in user_data.keys() else 0)
+        print('num99s: ' + new_json['num99s'])
+        new_json['pets'] = str(user_data['pets'] if 'pets' in user_data.keys() else 0)
+        print('pets: ' + new_json['pets'])
         new_json['updt_dt_tm'] = str(original_user_json['updt_dt_tm']['S'])
         print('updt_dt_tm: ' + new_json['updt_dt_tm'])
 
